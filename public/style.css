@@ -1,0 +1,84 @@
+ body {
+    background-color: #f8f9fa;
+  }
+
+  .scene {
+    width: 500px;
+    max-width: 90vw;
+    min-height: 420px;
+    perspective: 1500px;
+  }
+
+  .flashcard {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+  }
+
+  .flashcard.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .card-front {
+    background-color: #ffffff;
+  }
+
+  .card-back {
+    background-color: #198754;
+    color: #fff;
+    transform: rotateY(180deg);
+  }
+
+  .sign-icon-wrap {
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .sign-icon-wrap svg {
+    width: 70px;
+    height: 70px;
+  }
+
+  .options-list {
+    text-align: left;
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+  }
+
+  .options-list li {
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.4rem;
+    background-color: #f1f3f5;
+  }
+
+  .correct-answer {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border: 2px solid #fff;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+
+  .hint-text {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }

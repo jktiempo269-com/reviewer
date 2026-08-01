@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LTO 100-Item Reviewer</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
+
+  .scene {
+    width: 500px;
+    max-width: 90vw;
+    min-height: 420px;
+    perspective: 1500px;
+  }
+
+  .flashcard {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+  }
+
+  .flashcard.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .card-front {
+    background-color: #ffffff;
+  }
+
+  .card-back {
+    background-color: #198754;
+    color: #fff;
+    transform: rotateY(180deg);
+  }
+
+  .sign-icon-wrap {
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .sign-icon-wrap svg {
+    width: 70px;
+    height: 70px;
+  }
+
+  .options-list {
+    text-align: left;
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+  }
+
+  .options-list li {
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.4rem;
+    background-color: #f1f3f5;
+  }
+
+  .correct-answer {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border: 2px solid #fff;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+
+  .hint-text {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  /* --- Mobile responsiveness --- */
+  @media (max-width: 576px) {
+    body {
+    
+      padding: 0.5rem;
+    }
+
+    .container {
+      padding-top: 10rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+
+    .scene {
+      width: 100%;
+      min-height: 380px;
+    }
+
+    .flashcard {
+     min-height: auto;
+    }
+
+    .card-face {
+      height: fit-content;
+      padding: 1.25rem;
+    }
+    .card-back{
+        height: 30rem;
+    }
+   
+    .d-flex.gap-3.mt-4{
+       position: absolute;
+       bottom: 90px;
+    }
+    .d-flex.gap-2.mt-3{
+        position: absolute;
+        bottom: 50px;
+    }
+
+    .sign-icon-wrap svg {
+      width: 56px;
+      height: 56px;
+    }
+
+    #progress {
+      font-size: 0.85rem;
+    }
+
+    #questionText {
+      font-size: 1rem;
+    }
+
+    .options-list li {
+      font-size: 0.9rem;
+      padding: 0.35rem 0.6rem;
+    }
+
+    #answerText {
+      font-size: 1rem;
+    }
+
+    .correct-answer {
+      font-size: 0.95rem;
+      padding: 0.6rem 0.8rem;
+    }
+
+    .hint-text {
+      font-size: 0.75rem;
+    }
+
+    .d-flex.gap-3.mt-4 {
+      width: 100%;
+      gap: 0.5rem !important;
+    }
+
+    .d-flex.gap-3.mt-4 .btn {
+      flex: 1 1 0;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.5rem;
+      white-space: nowrap;
+    }
+
+    .d-flex.gap-2.mt-3 {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #jumpInput {
+      width: 70px !important;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .scene, .flashcard {
+      min-height: 420px;
+    }
+
+    .card-face {
+      padding: 1rem;
+    }
+
+    #questionText {
+      font-size: 0.9rem;
+    }
+
+    .options-list li {
+      font-size: 0.85rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 100vdh;">
+
+  <p class="text-muted mb-2" id="progress">Question 1 of 100</p>
+
+  <div class="scene">
+    <div class="flashcard" id="flashcard">
+      <div class="card-face card-front">
+        <h6 class="text-muted mb-3">QUESTION <span id="qNumFront"></span></h6>
+        <div class="sign-icon-wrap" id="signIconWrap"></div>
+        <p class="fs-5 fw-semibold" id="questionText"></p>
+        <ul class="options-list" id="optionsList"></ul>
+        <p class="hint-text mt-2">Click the card to reveal the answer</p>
+      </div>
+      <div class="card-face card-back">
+        <h6 class="mb-3">ANSWER</h6>
+        <p class="fs-5" id="answerText"></p>
+        <p class="hint-text mt-3">Click the card to go back to the question</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-3 mt-4">
+    <button class="btn btn-outline-secondary" id="prevBtn">&laquo; Previous</button>
+    <button class="btn btn-primary" id="nextBtn">Next &raquo;</button>
+  </div>
+
+  <div class="d-flex gap-2 mt-3 align-items-center">
+    <label for="jumpInput" class="text-muted small mb-0">Go to question:</label>
+    <input type="number" id="jumpInput" class="form-control form-control-sm" style="width: 90px;" min="1">
+    <button class="btn btn-sm btn-outline-primary" id="jumpBtn">Go</button>
+  </div>
+  <p class="text-danger small mt-1 mb-0" id="jumpError" style="display: none;"></p>
+
+</div>
+
+<script>
+  // --- Sign icon renderer: draws simple representative sign shapes with SVG ---
+  function polygonPoints(cx, cy, r, sides, rotation) {
+    const pts = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = rotation + (i * 2 * Math.PI) / sides;
+      pts.push(`${(cx + r * Math.cos(angle)).toFixed(1)},${(cy + r * Math.sin(angle)).toFixed(1)}`);
+    }
+    return pts.join(" ");
+  }
+
+  function shapeMarkup(spec) {
+    const cx = 30, cy = 30, r = 26;
+    switch (spec.shape) {
+      case "circle":
+        return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="5"/>`;
+      case "octagon":
+        return `<polygon points="${polygonPoints(cx, cy, r, 8, Math.PI / 8)}" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="4"/>`;
+      case "triangleUp":
+        return `<polygon points="${polygonPoints(cx, cy, r, 3, -Math.PI / 2)}" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="5" stroke-linejoin="round"/>`;
+      case "triangleDown":
+        return `<polygon points="${polygonPoints(cx, cy, r, 3, Math.PI / 2)}" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="5" stroke-linejoin="round"/>`;
+      case "diamond":
+        return `<polygon points="${polygonPoints(cx, cy, r, 4, Math.PI / 4)}" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="4" stroke-linejoin="round"/>`;
+      case "pentagon":
+        return `<polygon points="${polygonPoints(cx, cy, r, 5, -Math.PI / 2)}" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="4" stroke-linejoin="round"/>`;
+      case "rect":
+        return `<rect x="5" y="12" width="50" height="36" rx="4" fill="${spec.fill}" stroke="${spec.stroke}" stroke-width="4"/>`;
+      case "pavement":
+        return `<rect x="2" y="2" width="56" height="56" fill="#6c757d"/>`;
+      default:
+        return "";
+    }
+  }
+
+  function innerMarkup(spec) {
+    const cx = 30, cy = 30;
+    const s = spec.symbol || {};
+    switch (s.kind) {
+      case "text":
+        return `<text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="${s.size || 14}" font-weight="700" fill="${s.color || '#000'}">${s.value}</text>`;
+      case "diagonalBar":
+        return `<line x1="10" y1="10" x2="50" y2="50" stroke="${s.color || '#dc3545'}" stroke-width="5"/>`;
+      case "horizontalBar":
+        return `<rect x="10" y="26" width="40" height="8" fill="${s.color || '#fff'}"/>`;
+      case "arrowUp":
+        return `<polygon points="30,12 40,30 33,30 33,48 27,48 27,30 20,30" fill="${s.color || '#fff'}"/>`;
+      case "pavementLine":
+        if (s.style === "solidYellow") return `<rect x="27" y="4" width="6" height="52" fill="#ffc107"/>`;
+        if (s.style === "dashed") return Array.from({ length: 5 }, (_, i) =>
+            `<rect x="27" y="${4 + i * 11}" width="6" height="6" fill="#f8f9fa"/>`).join("");
+        if (s.style === "solidWhiteEdge") return `<rect x="46" y="4" width="5" height="52" fill="#f8f9fa"/>`;
+        if (s.style === "diagonalStripes") return `<g stroke="#f8f9fa" stroke-width="4">
+            <line x1="8" y1="52" x2="52" y2="8"/><line x1="18" y1="56" x2="56" y2="18"/><line x1="2" y1="42" x2="42" y2="2"/></g>`;
+        return "";
+      case "none":
+      default:
+        return "";
+    }
+  }
+
+  function renderSignIcon(spec) {
+    return `<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">${shapeMarkup(spec)}${innerMarkup(spec)}</svg>`;
+  }
+
+  // Sign specs for Section 1 (Road Signs & Pavement Markings), questions 1-25
+  const SIGN_SPECS = {
+    1: { shape: "circle", stroke: "#dc3545", fill: "#fff", symbol: { kind: "diagonalBar" } },
+    2: { shape: "circle", stroke: "#dc3545", fill: "#fff", symbol: { kind: "none" } },
+    3: { shape: "diamond", stroke: "#000", fill: "#ffc107", symbol: { kind: "text", value: "!", size: 22 } },
+    4: { shape: "rect", stroke: "#fff", fill: "#198754", symbol: { kind: "text", value: "→", size: 26, color: "#fff" } },
+    5: { shape: "octagon", stroke: "#fff", fill: "#dc3545", symbol: { kind: "text", value: "STOP", size: 9, color: "#fff" } },
+    6: { shape: "triangleDown", stroke: "#dc3545", fill: "#fff", symbol: { kind: "none" } },
+    7: { shape: "circle", stroke: "#dc3545", fill: "#dc3545", symbol: { kind: "horizontalBar" } },
+    8: { shape: "circle", stroke: "#dc3545", fill: "#fff", symbol: { kind: "text", value: "🚗", size: 20 } },
+    9: { shape: "circle", stroke: "#0d6efd", fill: "#0d6efd", symbol: { kind: "arrowUp" } },
+    10: { shape: "octagon", stroke: "#fff", fill: "#dc3545", symbol: { kind: "text", value: "STOP", size: 9, color: "#fff" } },
+    11: { shape: "diamond", stroke: "#000", fill: "#ffc107", symbol: { kind: "text", value: "〰", size: 20 } },
+    12: { shape: "diamond", stroke: "#000", fill: "#ffc107", symbol: { kind: "text", value: "🚸", size: 20 } },
+    13: { shape: "pentagon", stroke: "#000", fill: "#ffc107", symbol: { kind: "text", value: "🚸", size: 18 } },
+    14: { shape: "pavement", symbol: { kind: "pavementLine", style: "solidYellow" } },
+    15: { shape: "pavement", symbol: { kind: "pavementLine", style: "dashed" } },
+    16: { shape: "pavement", symbol: { kind: "pavementLine", style: "solidWhiteEdge" } },
+    17: { shape: "pavement", symbol: { kind: "pavementLine", style: "diagonalStripes" } },
+    18: { shape: "triangleUp", stroke: "#dc3545", fill: "#fff", symbol: { kind: "text", value: "!", size: 22 } },
+    19: { shape: "rect", stroke: "#fff", fill: "#0d6efd", symbol: { kind: "text", value: "12 km →", size: 9, color: "#fff" } },
+    20: { shape: "diamond", stroke: "#000", fill: "#ffc107", symbol: { kind: "text", value: "⤵", size: 18 } },
+    21: { shape: "circle", stroke: "#dc3545", fill: "#fff", symbol: { kind: "text", value: "60", size: 16 } },
+    22: { shape: "rect", stroke: "#fff", fill: "#0d6efd", symbol: { kind: "text", value: "⛽", size: 22 } },
+    23: { shape: "circle", stroke: "#dc3545", fill: "#fff", symbol: { kind: "text", value: "🚲", size: 20 } },
+    24: { shape: "rect", stroke: "#000", fill: "#ffc107", symbol: { kind: "text", value: "➤➤➤", size: 12, color: "#000" } },
+    25: { shape: "circle", stroke: "#dc3545", fill: "#fff", symbol: { kind: "text", value: "🚛", size: 20 } }
+  };
+
+</script>
+<script>
+  // Question data extracted from LTO_100_Question_Reviewer.pdf
+  const questions = [
+    {
+      number: 1,
+      question: "A circular sign with a red border and a red diagonal line through a white background generally means:",
+      options: {
+        A: "Yield ahead",
+        B: "A prohibition or restriction",
+        C: "Parking allowed",
+        D: "Hospital zone"
+      },
+      answer: "B"
+    },
+    {
+      number: 2,
+      question: "Regulatory signs are most commonly shown in which shape and color?",
+      options: {
+        A: "Yellow diamond",
+        B: "White or red circle/rectangle",
+        C: "Blue rectangle",
+        D: "Green triangle"
+      },
+      answer: "B"
+    },
+    {
+      number: 3,
+      question: "Warning signs that alert drivers to hazards ahead are typically:",
+      options: {
+        A: "Red octagons",
+        B: "Yellow diamonds with black symbols",
+        C: "Blue circles",
+        D: "White squares"
+      },
+      answer: "B"
+    },
+    {
+      number: 4,
+      question: "Green or blue rectangular signs on Philippine highways are used mainly for:",
+      options: {
+        A: "Speed limits",
+        B: "Directions, distances, and service information",
+        C: "No overtaking zones",
+        D: "Prohibiting trucks"
+      },
+      answer: "B"
+    },
+    {
+      number: 5,
+      question: "An octagonal red sign with the word STOP means the driver must:",
+      options: {
+        A: "Slow down only if traffic is present",
+        B: "Come to a complete stop before the stop line",
+        C: "Yield only to pedestrians",
+        D: "Sound the horn and proceed"
+      },
+      answer: "B"
+    },
+    {
+      number: 6,
+      question: "A downward-pointing triangular sign with a red border means:",
+      options: {
+        A: "No entry",
+        B: "Yield the right of way",
+        C: "One-way street",
+        D: "Speed hump ahead"
+      },
+      answer: "B"
+    },
+    {
+      number: 7,
+      question: "A sign showing a red circle with a white horizontal bar means:",
+      options: {
+        A: "No parking",
+        B: "No entry for all vehicles",
+        C: "No overtaking",
+        D: "No U-turn"
+      },
+      answer: "B"
+    },
+    {
+      number: 8,
+      question: "A sign with a red circle around a black car overtaking another car means:",
+      options: {
+        A: "No parking anytime",
+        B: "No overtaking",
+        C: "One-way traffic",
+        D: "Priority to oncoming traffic"
+      },
+      answer: "B"
+    },
+    {
+      number: 9,
+      question: "A blue circular sign with a white arrow pointing straight up indicates:",
+      options: {
+        A: "A suggestion to turn around",
+        B: "A mandatory direction that must be followed",
+        C: "A prohibited direction",
+        D: "A parking area"
+      },
+      answer: "B"
+    },
+    {
+      number: 10,
+      question: "Which sign shape is reserved almost exclusively for the STOP sign so it can be recognized even from the back?",
+      options: {
+        A: "Triangle",
+        B: "Octagon",
+        C: "Diamond",
+        D: "Pentagon"
+      },
+      answer: "B"
+    },
+    {
+      number: 11,
+      question: "A yellow diamond sign showing a winding arrow warns drivers of:",
+      options: {
+        A: "A series of curves ahead",
+        B: "A merging lane",
+        C: "A railroad crossing",
+        D: "A steep downhill grade"
+      },
+      answer: "A"
+    },
+    {
+      number: 12,
+      question: "A yellow sign with a symbol of children walking is placed near:",
+      options: {
+        A: "Hospitals",
+        B: "Schools",
+        C: "Cemeteries",
+        D: "Bus terminals"
+      },
+      answer: "B"
+    },
+    {
+      number: 13,
+      question: "A pentagon-shaped yellow sign with a black symbol of a child crossing usually warns of:",
+      options: {
+        A: "A pedestrian lane far from a school",
+        B: "A school zone ahead",
+        C: "A playground with no crossing",
+        D: "A speed hump only"
+      },
+      answer: "B"
+    },
+    {
+      number: 14,
+      question: "On the pavement, a solid single yellow line separating opposite lanes of traffic means:",
+      options: {
+        A: "Overtaking is allowed if the road is clear",
+        B: "Overtaking and crossing the line is prohibited",
+        C: "The lane is for buses only",
+        D: "The lane ends ahead"
+      },
+      answer: "B"
+    },
+    {
+      number: 15,
+      question: "A broken (dashed) white or yellow line on the pavement generally means:",
+      options: {
+        A: "Passing/lane changes may be done when safe",
+        B: "Stopping is required",
+        C: "The lane is closed",
+        D: "Parking is allowed"
+      },
+      answer: "A"
+    },
+    {
+      number: 16,
+      question: "A solid white line at the edge of the roadway marks:",
+      options: {
+        A: "The center of the road",
+        B: "The edge of the usable roadway/shoulder",
+        C: "A pedestrian lane",
+        D: "A bicycle lane only"
+      },
+      answer: "B"
+    },
+    {
+      number: 17,
+      question: "Diagonal white stripes painted in a triangular area on the road usually indicate:",
+      options: {
+        A: "A parking bay",
+        B: "An area where entry or stopping is prohibited (channelizing island)",
+        C: "A bus stop",
+        D: "A loading zone"
+      },
+      answer: "B"
+    },
+    {
+      number: 18,
+      question: "A sign showing a red triangle with an exclamation point generally warns of:",
+      options: {
+        A: "A general hazard ahead not covered by a specific sign",
+        B: "A hospital zone",
+        C: "A parking restriction",
+        D: "A speed limit change"
+      },
+      answer: "A"
+    },
+    {
+      number: 19,
+      question: "Which of the following is an example of an informational (guide) sign?",
+      options: {
+        A: "No U-turn",
+        B: "Speed Limit 60",
+        C: "Distance to next town/exit number",
+        D: "Stop"
+      },
+      answer: "C"
+    },
+    {
+      number: 20,
+      question: "A yellow sign showing two arrows merging into one warns of:",
+      options: {
+        A: "A lane ending or merging ahead",
+        B: "A four-way intersection",
+        C: "A pedestrian crossing",
+        D: "A speed hump"
+      },
+      answer: "A"
+    },
+    {
+      number: 21,
+      question: "A circular white sign with a black number and red border, such as \"60\", represents:",
+      options: {
+        A: "A route number",
+        B: "A maximum speed limit in kph",
+        C: "A minimum speed limit",
+        D: "A distance marker"
+      },
+      answer: "B"
+    },
+    {
+      number: 22,
+      question: "A sign showing a fuel pump symbol on a blue background tells drivers:",
+      options: {
+        A: "Fueling is prohibited nearby",
+        B: "A gas station is available ahead",
+        C: "Vehicles must slow down",
+        D: "No parking near fuel trucks"
+      },
+      answer: "B"
+    },
+    {
+      number: 23,
+      question: "A red circular sign with a bicycle symbol crossed out means:",
+      options: {
+        A: "Bicycle lane ahead",
+        B: "Bicycles are prohibited on this road",
+        C: "Bicycle repair shop nearby",
+        D: "Slow down for cyclists"
+      },
+      answer: "B"
+    },
+    {
+      number: 24,
+      question: "Chevron alignment signs (black arrows on a yellow board) are used to indicate:",
+      options: {
+        A: "Direction and sharpness of an upcoming curve",
+        B: "A dead-end road",
+        C: "A speed limit",
+        D: "A pedestrian crossing"
+      },
+      answer: "A"
+    },
+    {
+      number: 25,
+      question: "A sign combining a red circle with a truck symbol means:",
+      options: {
+        A: "Trucks must stop and pay toll",
+        B: "Trucks are prohibited from using the road",
+        C: "Trucks have the right of way",
+        D: "Trucks must use the left lane"
+      },
+      answer: "B"
+    },
+    {
+      number: 26,
+      question: "At an intersection with no traffic signs or signals, which vehicle generally has the right of way?",
+      options: {
+        A: "The faster vehicle",
+        B: "The vehicle already inside or entering the intersection first / from the right, per traffic rules",
+        C: "The larger vehicle",
+        D: "The vehicle turning left"
+      },
+      answer: "B"
+    },
+    {
+      number: 27,
+      question: "When two vehicles reach an uncontrolled intersection at approximately the same time, the driver must yield to the vehicle:",
+      options: {
+        A: "Coming from the left",
+        B: "Coming from the right",
+        C: "Behind them",
+        D: "Signaling a turn"
+      },
+      answer: "B"
+    },
+    {
+      number: 28,
+      question: "Before making a turn, a driver should:",
+      options: {
+        A: "Turn immediately without signaling if no cars are near",
+        B: "Signal well in advance and check mirrors/blind spots",
+        C: "Only use the horn as a signal",
+        D: "Speed up to clear the turn quickly"
+      },
+      answer: "B"
+    },
+    {
+      number: 29,
+      question: "Overtaking should never be done:",
+      options: {
+        A: "On a straight, clear road",
+        B: "On a curve, hill crest, or intersection with limited visibility",
+        C: "During the daytime",
+        D: "On expressways"
+      },
+      answer: "B"
+    },
+    {
+      number: 30,
+      question: "On a multi-lane highway, slower-moving vehicles should generally keep to the:",
+      options: {
+        A: "Left lane",
+        B: "Right lane",
+        C: "Center lane only",
+        D: "Shoulder"
+      },
+      answer: "B"
+    },
+    {
+      number: 31,
+      question: "The general rule for the maximum speed limit on Philippine national roads (absent a posted sign) is around:",
+      options: {
+        A: "20 kph",
+        B: "60 kph",
+        C: "100 kph",
+        D: "150 kph"
+      },
+      answer: "B"
+    },
+    {
+      number: 32,
+      question: "In school zones, speed limits are typically reduced to about:",
+      options: {
+        A: "20 kph",
+        B: "60 kph",
+        C: "80 kph",
+        D: "100 kph"
+      },
+      answer: "A"
+    },
+    {
+      number: 33,
+      question: "A driver approaching a pedestrian lane with people crossing must:",
+      options: {
+        A: "Sound the horn and proceed",
+        B: "Slow down and yield to the pedestrians",
+        C: "Speed up to pass before they finish crossing",
+        D: "Only stop if a traffic officer is present"
+      },
+      answer: "B"
+    },
+    {
+      number: 34,
+      question: "When a traffic light turns yellow while a driver is already close to the intersection, the driver should:",
+      options: {
+        A: "Accelerate to beat the red light",
+        B: "Stop if it can be done safely, otherwise proceed cautiously and clear the intersection",
+        C: "Reverse immediately",
+        D: "Wait for a green arrow only"
+      },
+      answer: "B"
+    },
+    {
+      number: 35,
+      question: "A U-turn is generally prohibited:",
+      options: {
+        A: "On roads with a solid yellow center line or where a U-turn sign is posted",
+        B: "On all one-way streets only",
+        C: "In residential subdivisions",
+        D: "During rainy weather"
+      },
+      answer: "A"
+    },
+    {
+      number: 36,
+      question: "When emergency vehicles with sirens and flashing lights approach from behind, drivers should:",
+      options: {
+        A: "Maintain speed and lane",
+        B: "Pull over safely to the side and give way",
+        C: "Speed up to clear the intersection first",
+        D: "Stop in the middle of the lane"
+      },
+      answer: "B"
+    },
+    {
+      number: 37,
+      question: "Which of the following best describes defensive lane positioning when a large truck is directly ahead?",
+      options: {
+        A: "Follow closely to save fuel",
+        B: "Keep a safe following distance since large vehicles have bigger blind spots",
+        C: "Overtake immediately regardless of visibility",
+        D: "Drive alongside the truck at all times"
+      },
+      answer: "B"
+    },
+    {
+      number: 38,
+      question: "Parking is generally prohibited:",
+      options: {
+        A: "In front of your own residence",
+        B: "Within a set distance from a fire hydrant, intersection, or pedestrian crossing",
+        C: "On private subdivision roads",
+        D: "On weekends"
+      },
+      answer: "B"
+    },
+    {
+      number: 39,
+      question: "When parking on a hill facing downhill without a curb, the front wheels should be turned:",
+      options: {
+        A: "Toward the center of the road",
+        B: "Toward the curb/edge of the road",
+        C: "Straight ahead only",
+        D: "It does not matter"
+      },
+      answer: "B"
+    },
+    {
+      number: 40,
+      question: "The proper hand signal for a left turn (when hand signals are used) is:",
+      options: {
+        A: "Arm extended straight out from the window",
+        B: "Arm bent upward at the elbow",
+        C: "Arm bent downward at the elbow",
+        D: "Arm waved up and down"
+      },
+      answer: "A"
+    },
+    {
+      number: 41,
+      question: "Before changing lanes, a driver must:",
+      options: {
+        A: "Change abruptly to avoid alerting other drivers",
+        B: "Signal, check mirrors and blind spot, then move only when safe",
+        C: "Rely on the horn instead of signaling",
+        D: "Only check the rearview mirror"
+      },
+      answer: "B"
+    },
+    {
+      number: 42,
+      question: "On a road with no marked lanes, vehicles should generally travel:",
+      options: {
+        A: "In the center of the road",
+        B: "As close to the right side of the road as practicable",
+        C: "On the left side",
+        D: "Anywhere convenient"
+      },
+      answer: "B"
+    },
+    {
+      number: 43,
+      question: "The recommended following distance under normal dry conditions is often summarized as the:",
+      options: {
+        A: "1-second rule",
+        B: "3-second rule",
+        C: "10-second rule",
+        D: "There is no recommended distance"
+      },
+      answer: "B"
+    },
+    {
+      number: 44,
+      question: "A driver merging onto an expressway from an on-ramp must:",
+      options: {
+        A: "Have the right of way over vehicles already on the expressway",
+        B: "Yield to traffic already on the expressway and merge when safe",
+        C: "Stop completely on the ramp before merging",
+        D: "Merge only at the posted speed limit regardless of gaps"
+      },
+      answer: "B"
+    },
+    {
+      number: 45,
+      question: "When approaching a roundabout, drivers already inside the circle generally have:",
+      options: {
+        A: "No right of way",
+        B: "The right of way over vehicles entering",
+        C: "Right of way only if signaling",
+        D: "Right of way only during daytime"
+      },
+      answer: "B"
+    },
+    {
+      number: 46,
+      question: "A solid red traffic light means a driver must:",
+      options: {
+        A: "Slow down and proceed with caution",
+        B: "Stop completely, except where a protected right turn is legally allowed",
+        C: "Stop only if pedestrians are present",
+        D: "Proceed if no cross traffic is visible"
+      },
+      answer: "B"
+    },
+    {
+      number: 47,
+      question: "A flashing yellow traffic light means drivers should:",
+      options: {
+        A: "Stop completely",
+        B: "Proceed with caution",
+        C: "Treat it the same as a red light",
+        D: "Ignore it and continue at normal speed"
+      },
+      answer: "B"
+    },
+    {
+      number: 48,
+      question: "A flashing red traffic light should be treated the same as a:",
+      options: {
+        A: "Yield sign",
+        B: "Stop sign",
+        C: "Green light",
+        D: "Warning sign only"
+      },
+      answer: "B"
+    },
+    {
+      number: 49,
+      question: "When driving in fog or heavy rain, a driver should primarily:",
+      options: {
+        A: "Use high-beam headlights for maximum visibility",
+        B: "Reduce speed and use low-beam headlights or fog lights",
+        C: "Turn off headlights to reduce glare",
+        D: "Drive at the posted speed limit regardless of conditions"
+      },
+      answer: "B"
+    },
+    {
+      number: 50,
+      question: "Tailgating (following another vehicle too closely) is dangerous mainly because it:",
+      options: {
+        A: "Improves fuel efficiency",
+        B: "Reduces the time available to react and stop safely",
+        C: "Is required on expressways",
+        D: "Helps prevent other cars from merging"
+      },
+      answer: "B"
+    },
+    {
+      number: 51,
+      question: "Republic Act 4136 is more commonly known as the:",
+      options: {
+        A: "Anti-Distracted Driving Act",
+        B: "Land Transportation and Traffic Code",
+        C: "Motor Vehicle User's Charge Law",
+        D: "Child Safety in Motor Vehicles Act"
+      },
+      answer: "B"
+    },
+    {
+      number: 52,
+      question: "The law requiring the use of seatbelts by drivers and passengers in the Philippines is known as the:",
+      options: {
+        A: "Seat Belts Use Act",
+        B: "Anti-Drunk Driving Act",
+        C: "Land Transportation Code",
+        D: "Comprehensive Dangerous Drugs Act"
+      },
+      answer: "A"
+    },
+    {
+      number: 53,
+      question: "The law requiring motorcycle riders and back-riders to wear standard protective helmets is popularly called the:",
+      options: {
+        A: "Motorcycle Helmet Act",
+        B: "Child Safety Act",
+        C: "Seatbelt Law",
+        D: "Traffic Code of the Philippines"
+      },
+      answer: "A"
+    },
+    {
+      number: 54,
+      question: "Using a mobile phone to text or call while driving, without a hands-free device, is generally penalized under the:",
+      options: {
+        A: "Anti-Distracted Driving Act",
+        B: "Clean Air Act",
+        C: "Motor Vehicle Registration Law",
+        D: "Cybercrime Prevention Act"
+      },
+      answer: "A"
+    },
+    {
+      number: 55,
+      question: "Driving under the influence of alcohol or drugs is penalized primarily under the:",
+      options: {
+        A: "Anti-Drunk and Drugged Driving Act",
+        B: "Land Transportation Franchising Law",
+        C: "Clean Air Act",
+        D: "Comprehensive Traffic Code"
+      },
+      answer: "A"
+    },
+    {
+      number: 56,
+      question: "A driver caught for reckless driving is generally one who operates a vehicle:",
+      options: {
+        A: "Within the speed limit and following all rules",
+        B: "In a manner that endangers persons or property",
+        C: "With expired registration only",
+        D: "Without a spare tire"
+      },
+      answer: "B"
+    },
+    {
+      number: 57,
+      question: "Driving without a valid driver's license is a violation that can result in:",
+      options: {
+        A: "A warning only, with no penalty",
+        B: "A fine and possible confiscation of the vehicle's plate or apprehension",
+        C: "Automatic issuance of a temporary license",
+        D: "No consequence if the vehicle is registered"
+      },
+      answer: "B"
+    },
+    {
+      number: 58,
+      question: "Under the child safety law, young children in private vehicles are generally required to:",
+      options: {
+        A: "Sit on an adult's lap in the front seat",
+        B: "Be secured in an appropriate child restraint system in the back seat",
+        C: "Always sit in the front passenger seat",
+        D: "Have no specific restraint requirement"
+      },
+      answer: "B"
+    },
+    {
+      number: 59,
+      question: "\"Colorum\" operation refers to:",
+      options: {
+        A: "A vehicle operating for hire without the proper franchise or permit",
+        B: "A vehicle with an expired emission test",
+        C: "A properly registered taxi",
+        D: "A government-owned vehicle"
+      },
+      answer: "A"
+    },
+    {
+      number: 60,
+      question: "Failure to use a seatbelt while driving is typically penalized with:",
+      options: {
+        A: "Imprisonment only",
+        B: "A fine that can increase for repeated offenses",
+        C: "License revocation on the first offense",
+        D: "No penalty for front-seat drivers"
+      },
+      answer: "B"
+    },
+    {
+      number: 61,
+      question: "Disregarding a traffic sign, such as a No Entry or No U-turn sign, is generally classified as:",
+      options: {
+        A: "A non-violation since signs are only suggestions",
+        B: "A traffic violation subject to a fine",
+        C: "A criminal offense only",
+        D: "Grounds for automatic license revocation"
+      },
+      answer: "B"
+    },
+    {
+      number: 62,
+      question: "Reckless driving that results in physical injuries can lead to:",
+      options: {
+        A: "A civil and/or criminal case in addition to administrative penalties",
+        B: "No consequence beyond a verbal warning",
+        C: "Automatic dismissal of the case",
+        D: "A fine only if the other party is unlicensed"
+      },
+      answer: "A"
+    },
+    {
+      number: 63,
+      question: "Obstruction, such as double parking that blocks traffic flow, is:",
+      options: {
+        A: "Allowed if only for a few minutes",
+        B: "A traffic violation subject to fines and possible towing",
+        C: "Only illegal on national highways",
+        D: "Permitted with hazard lights on"
+      },
+      answer: "B"
+    },
+    {
+      number: 64,
+      question: "Fixing or tampering with a vehicle's plate number to avoid identification is:",
+      options: {
+        A: "A minor infraction with no real penalty",
+        B: "Illegal and can lead to serious penalties including confiscation of the vehicle",
+        C: "Allowed if done by a licensed mechanic",
+        D: "Only a concern for motorcycles"
+      },
+      answer: "B"
+    },
+    {
+      number: 65,
+      question: "A driver who flees the scene after being involved in an accident causing injury may be liable for:",
+      options: {
+        A: "No additional penalty beyond the accident itself",
+        B: "Hit-and-run charges in addition to the traffic violation",
+        C: "A reduced fine for leaving quickly",
+        D: "Nothing, if the vehicle was insured"
+      },
+      answer: "B"
+    },
+    {
+      number: 66,
+      question: "Operating an unregistered motor vehicle on a public road is:",
+      options: {
+        A: "Legal as long as it is roadworthy",
+        B: "A violation subject to fines and possible impoundment",
+        C: "Allowed for the first 30 days after purchase indefinitely",
+        D: "Only illegal for trucks"
+      },
+      answer: "B"
+    },
+    {
+      number: 67,
+      question: "The Anti-Distracted Driving Act generally allows the use of a mobile device while driving only when:",
+      options: {
+        A: "Held in the driver's hand while typing",
+        B: "Used hands-free, such as through a dashboard mount or Bluetooth",
+        C: "The vehicle is moving slower than 20 kph",
+        D: "Never, under any circumstance"
+      },
+      answer: "B"
+    },
+    {
+      number: 68,
+      question: "Refusal to submit to a field sobriety test when lawfully required by authorities can result in:",
+      options: {
+        A: "No consequence, since the test is optional",
+        B: "Being presumed to be driving under the influence and facing corresponding penalties",
+        C: "An automatic warning only",
+        D: "A reward for cooperation"
+      },
+      answer: "B"
+    },
+    {
+      number: 69,
+      question: "Overloading a vehicle beyond its rated passenger or cargo capacity is:",
+      options: {
+        A: "Allowed if the extra passengers are family members",
+        B: "A traffic violation that compromises vehicle control and safety",
+        C: "Permitted on short trips only",
+        D: "Only regulated for buses"
+      },
+      answer: "B"
+    },
+    {
+      number: 70,
+      question: "A driver's license may be suspended or revoked after:",
+      options: {
+        A: "A single minor parking violation",
+        B: "The accumulation of demerit points or repeated/serious violations",
+        C: "Renewing the license on time",
+        D: "Passing the practical driving exam"
+      },
+      answer: "B"
+    },
+    {
+      number: 71,
+      question: "The core principle of defensive driving is to:",
+      options: {
+        A: "Drive as fast as traffic allows",
+        B: "Anticipate hazards and adjust driving to avoid collisions, even if caused by others",
+        C: "Always have the right of way",
+        D: "Rely entirely on other drivers to avoid mistakes"
+      },
+      answer: "B"
+    },
+    {
+      number: 72,
+      question: "If a vehicle's brakes suddenly fail while driving, the safest first action is generally to:",
+      options: {
+        A: "Turn off the engine immediately",
+        B: "Downshift, pump the brakes if possible, and use the parking brake gradually while steering to a safe stop",
+        C: "Jump out of the moving vehicle",
+        D: "Accelerate to reach a service center"
+      },
+      answer: "B"
+    },
+    {
+      number: 73,
+      question: "If a front tire blows out while driving, a driver should:",
+      options: {
+        A: "Brake hard immediately",
+        B: "Grip the wheel firmly, ease off the accelerator, and slow down gradually without hard braking",
+        C: "Turn sharply to compensate",
+        D: "Continue at the same speed"
+      },
+      answer: "B"
+    },
+    {
+      number: 74,
+      question: "When driving downhill for a long stretch, it is best to:",
+      options: {
+        A: "Shift to a lower gear to help control speed",
+        B: "Shift to neutral to save fuel",
+        C: "Turn off the engine to coast",
+        D: "Ride the brakes continuously at high speed"
+      },
+      answer: "A"
+    },
+    {
+      number: 75,
+      question: "Hydroplaning occurs when:",
+      options: {
+        A: "Tires overheat on dry pavement",
+        B: "A layer of water builds up between the tires and the road, causing loss of traction",
+        C: "The engine overheats in the rain",
+        D: "Headlights are used during the day"
+      },
+      answer: "B"
+    },
+    {
+      number: 76,
+      question: "To reduce the risk of hydroplaning, a driver should:",
+      options: {
+        A: "Increase speed through puddles",
+        B: "Reduce speed and avoid sudden steering or braking on wet roads",
+        C: "Use worn-out tires with less tread",
+        D: "Follow other vehicles closely"
+      },
+      answer: "B"
+    },
+    {
+      number: 77,
+      question: "Driving while fatigued is dangerous mainly because it:",
+      options: {
+        A: "Improves reaction time",
+        B: "Slows reaction time and can lead to microsleep or lapses in attention",
+        C: "Has no effect on driving ability",
+        D: "Only affects long-haul truck drivers"
+      },
+      answer: "B"
+    },
+    {
+      number: 78,
+      question: "The \"SIPDE\" concept in defensive driving stands for a process of:",
+      options: {
+        A: "Search, Identify, Predict, Decide, Execute",
+        B: "Stop, Idle, Park, Drive, Exit",
+        C: "Steer, Ignite, Push, Drive, Enter",
+        D: "Signal, Inspect, Pass, Drive, Exit"
+      },
+      answer: "A"
+    },
+    {
+      number: 79,
+      question: "When driving at night, a driver should dim the headlights (use low beam) when:",
+      options: {
+        A: "Meeting oncoming vehicles or following closely behind another vehicle",
+        B: "Driving on an empty highway",
+        C: "Passing through a tunnel with no traffic",
+        D: "Parking in a garage"
+      },
+      answer: "A"
+    },
+    {
+      number: 80,
+      question: "If a driver starts to feel drowsy on a long trip, the safest action is to:",
+      options: {
+        A: "Increase speed to reach the destination faster",
+        B: "Pull over at a safe location to rest before continuing",
+        C: "Open the windows and continue driving",
+        D: "Drink coffee and keep driving without stopping"
+      },
+      answer: "B"
+    },
+    {
+      number: 81,
+      question: "A properly adjusted side mirror should minimize:",
+      options: {
+        A: "The driver's view of the rear tire",
+        B: "Blind spots to the sides and rear of the vehicle",
+        C: "The view of the dashboard",
+        D: "The driver's field of forward vision"
+      },
+      answer: "B"
+    },
+    {
+      number: 82,
+      question: "When approaching a flooded section of road, a driver should:",
+      options: {
+        A: "Drive through quickly at normal speed",
+        B: "Assess the water depth first and avoid crossing if it is too deep or moving fast",
+        C: "Turn off the headlights to save the battery",
+        D: "Follow the vehicle ahead regardless of depth"
+      },
+      answer: "B"
+    },
+    {
+      number: 83,
+      question: "Engine overheating while driving is often first indicated by:",
+      options: {
+        A: "A drop in fuel gauge reading",
+        B: "A rising temperature gauge or warning light, sometimes with steam from the hood",
+        C: "A flat tire warning light",
+        D: "The radio turning off"
+      },
+      answer: "B"
+    },
+    {
+      number: 84,
+      question: "If smoke starts coming from the engine compartment while driving, a driver should:",
+      options: {
+        A: "Open the hood immediately while the engine is running",
+        B: "Pull over safely, turn off the engine, and exit the vehicle before investigating further",
+        C: "Continue driving to the nearest gas station",
+        D: "Pour water directly onto the engine while running"
+      },
+      answer: "B"
+    },
+    {
+      number: 85,
+      question: "The main purpose of maintaining a safe following distance is to:",
+      options: {
+        A: "Prevent other drivers from overtaking",
+        B: "Provide enough time and space to stop safely if the vehicle ahead brakes suddenly",
+        C: "Improve fuel economy only",
+        D: "Allow for faster overtaking maneuvers"
+      },
+      answer: "B"
+    },
+    {
+      number: 86,
+      question: "Before taking the LTO written examination, a first-time applicant typically needs to complete:",
+      options: {
+        A: "A driving school certificate only, with no seminar required",
+        B: "A Comprehensive Driver's Education/Theoretical Driving Course (TDC) seminar",
+        C: "A medical exam only",
+        D: "Nothing beyond submitting an application form"
+      },
+      answer: "B"
+    },
+    {
+      number: 87,
+      question: "A Student Permit is generally required before an applicant can:",
+      options: {
+        A: "Apply for a Professional license directly",
+        B: "Undergo practical driving lessons and eventually take the practical exam",
+        C: "Operate a public utility vehicle",
+        D: "Renew an existing non-professional license"
+      },
+      answer: "B"
+    },
+    {
+      number: 88,
+      question: "A Non-Professional Driver's License is intended primarily for:",
+      options: {
+        A: "Driving for hire or public transport",
+        B: "Personal or private use of a motor vehicle",
+        C: "Operating heavy trucks for a living",
+        D: "Driving government vehicles only"
+      },
+      answer: "B"
+    },
+    {
+      number: 89,
+      question: "A Professional Driver's License is required for:",
+      options: {
+        A: "Driving one's own private car only",
+        B: "Driving for hire, compensation, or as a public utility/commercial vehicle driver",
+        C: "Riding a bicycle on public roads",
+        D: "Operating a motorcycle below 110cc"
+      },
+      answer: "B"
+    },
+    {
+      number: 90,
+      question: "Which document is generally required to prove that a vehicle has passed the required roadworthiness check before registration?",
+      options: {
+        A: "Certificate of Emission Compliance / Motor Vehicle Inspection result",
+        B: "Barangay clearance",
+        C: "Voter's ID",
+        D: "Marriage certificate"
+      },
+      answer: "A"
+    },
+    {
+      number: 91,
+      question: "The Official Receipt (OR) and Certificate of Registration (CR) of a vehicle should be:",
+      options: {
+        A: "Left permanently at home for safekeeping",
+        B: "Carried in the vehicle or otherwise be presentable when required by authorities",
+        C: "Discarded after the first year",
+        D: "Only necessary for motorcycles"
+      },
+      answer: "B"
+    },
+    {
+      number: 92,
+      question: "A driver's license typically becomes eligible for renewal in the Philippines every:",
+      options: {
+        A: "1 year only, with no other option",
+        B: "Several years, with earlier options for non-professional licenses, subject to current LTO rules",
+        C: "10 years with no medical requirement",
+        D: "Only upon expiration of the vehicle's registration"
+      },
+      answer: "B"
+    },
+    {
+      number: 93,
+      question: "Failure to renew a driver's license before its expiration typically results in:",
+      options: {
+        A: "Automatic permanent revocation",
+        B: "The license becoming expired, generally requiring renewal and possibly penalties depending on how long it lapsed",
+        C: "No consequence at all",
+        D: "Immediate downgrade to a student permit"
+      },
+      answer: "B"
+    },
+    {
+      number: 94,
+      question: "A driver stopped by traffic enforcement without a physical license but who can be verified through the LTMS portal or a valid digital ID may:",
+      options: {
+        A: "Automatically be arrested regardless of verification",
+        B: "Be allowed to present valid verification depending on current LTO policy, instead of an immediate physical license",
+        C: "Never be allowed to drive again",
+        D: "Be charged the maximum penalty with no exceptions"
+      },
+      answer: "B"
+    },
+    {
+      number: 95,
+      question: "Vehicle registration must generally be renewed:",
+      options: {
+        A: "Only when the vehicle is sold",
+        B: "On or before the scheduled renewal period set by the LTO, often annually",
+        C: "Every five years without exception",
+        D: "Never, once initially registered"
+      },
+      answer: "B"
+    },
+    {
+      number: 96,
+      question: "A Certificate of Registration (CR) primarily serves to:",
+      options: {
+        A: "Prove ownership and registration details of the motor vehicle",
+        B: "Replace the need for a driver's license",
+        C: "Serve as proof of insurance only",
+        D: "Act as a parking permit"
+      },
+      answer: "A"
+    },
+    {
+      number: 97,
+      question: "Compulsory Third-Party Liability (CTPL) insurance is required mainly to:",
+      options: {
+        A: "Cover damage to the insured driver's own vehicle",
+        B: "Provide compensation to third parties who may be injured or whose property is damaged in an accident",
+        C: "Replace the need for vehicle registration",
+        D: "Cover fuel expenses"
+      },
+      answer: "B"
+    },
+    {
+      number: 98,
+      question: "When a vehicle is sold to a new owner, the change of ownership should be reflected through:",
+      options: {
+        A: "No action is required by either party",
+        B: "A formal transfer of ownership process with the LTO",
+        C: "Verbal agreement only",
+        D: "Simply changing the plate number without paperwork"
+      },
+      answer: "B"
+    },
+    {
+      number: 99,
+      question: "An LTO-issued student permit generally restricts the holder from:",
+      options: {
+        A: "Driving without a licensed non-professional or professional driver beside them",
+        B: "Driving during weekdays only",
+        C: "Driving any vehicle at any time without restriction",
+        D: "Applying for a full license afterward"
+      },
+      answer: "A"
+    },
+    {
+      number: 100,
+      question: "Which of the following is typically required when applying for a driver's license for the first time?",
+      options: {
+        A: "A valid ID, proof of the required seminar, and passing the written and practical exams",
+        B: "A vehicle registration in the applicant's name only",
+        C: "A barangay business permit",
+        D: "Proof of vehicle ownership only, with no exams required"
+      },
+      answer: "A"
+    },
+  ];
+
+  let currentIndex = 0;
+
+  const flashcard = document.getElementById("flashcard");
+  const qNumFront = document.getElementById("qNumFront");
+  const questionText = document.getElementById("questionText");
+  const optionsList = document.getElementById("optionsList");
+  const answerText = document.getElementById("answerText");
+  const progress = document.getElementById("progress");
+  const nextBtn = document.getElementById("nextBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const jumpInput = document.getElementById("jumpInput");
+  const jumpBtn = document.getElementById("jumpBtn");
+  const jumpError = document.getElementById("jumpError");
+
+  function renderCard() {
+    const item = questions[currentIndex];
+
+    // Always show the question side first when navigating
+    flashcard.classList.remove("flipped");
+
+    qNumFront.textContent = item.number;
+    questionText.textContent = item.question;
+
+    const signIconWrap = document.getElementById("signIconWrap");
+    const spec = SIGN_SPECS[item.number];
+    signIconWrap.innerHTML = spec ? renderSignIcon(spec) : "";
+
+    optionsList.innerHTML = "";
+    Object.entries(item.options).forEach(([letter, text]) => {
+      const li = document.createElement("li");
+      li.textContent = `${letter}. ${text}`;
+      optionsList.appendChild(li);
+    });
+
+    const correctLetter = item.answer;
+    const correctText = item.options[correctLetter];
+    answerText.innerHTML = `<div class="correct-answer">${correctLetter}. ${correctText}</div>`;
+
+    progress.textContent = `Question ${item.number} of ${questions.length}`;
+  }
+
+  flashcard.addEventListener("click", () => {
+    flashcard.classList.toggle("flipped");
+  });
+
+  nextBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex + 1) % questions.length;
+    renderCard();
+  });
+
+  prevBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+    renderCard();
+  });
+
+  function jumpToQuestion() {
+    const value = parseInt(jumpInput.value, 10);
+
+    if (isNaN(value) || value < 1 || value > questions.length) {
+      jumpError.textContent = `Please enter a number between 1 and ${questions.length}.`;
+      jumpError.style.display = "block";
+      return;
+    }
+
+    jumpError.style.display = "none";
+    currentIndex = value - 1; // question numbers start at 1, array is 0-indexed
+    renderCard();
+    jumpInput.value = "";
+  }
+
+  jumpBtn.addEventListener("click", jumpToQuestion);
+
+  jumpInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      jumpToQuestion();
+    }
+  });
+
+  renderCard();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
