@@ -38,7 +38,9 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* Top-aligned (not centered) so content starts at the same spot
+       on every card regardless of how much text/whether an icon exists */
+    justify-content: flex-start;
     padding: 2rem;
     overflow-y: auto;
   }
@@ -53,14 +55,30 @@
     transform: rotateY(180deg);
   }
 
+  /* Fixed-height slot for the sign icon so its presence/absence never
+     shifts the question text or options below it */
   .sign-icon-wrap {
     text-align: center;
     margin-bottom: 0.75rem;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
   .sign-icon-wrap svg {
     width: 70px;
     height: 70px;
+  }
+
+  /* Reserve enough room for the longest questions (~3 lines) so the
+     options list always starts at a consistent vertical position */
+  #questionText {
+    min-height: 4.8em;
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0;
   }
 
   .options-list {
@@ -77,13 +95,19 @@
     background-color: #f1f3f5;
   }
 
+  #answerText {
+    min-height: 4.5em;
+    display: flex;
+    align-items: flex-start;
+  }
+
   .correct-answer {
     background-color: rgba(255, 255, 255, 0.2) !important;
     border: 2px solid #fff;
     border-radius: 0.75rem;
     padding: 0.75rem 1rem;
-    margin-top: 0.5rem;
     font-weight: 600;
+    width: 100%;
   }
 
   .hint-text {
@@ -92,7 +116,8 @@
   }
 
   .nav-controls {
-    margin-top: 1.25rem;
+    margin-top: auto;
+    padding-top: 1.25rem;
   }
 
   /* --- Mobile responsiveness --- */
@@ -124,6 +149,10 @@
       height: 600px;
     }
 
+    .sign-icon-wrap {
+      min-height: 56px;
+    }
+
     .sign-icon-wrap svg {
       width: 56px;
       height: 56px;
@@ -135,6 +164,7 @@
 
     #questionText {
       font-size: 1rem;
+      min-height: 5.4em;
     }
 
     .options-list li {
@@ -144,6 +174,7 @@
 
     #answerText {
       font-size: 1rem;
+      min-height: 5em;
     }
 
     .correct-answer {
@@ -250,6 +281,8 @@
     .sign-icon-wrap {
       flex: 0 0 auto;
       margin-bottom: 0;
+      min-height: unset;
+      min-width: 44px;
     }
 
     .sign-icon-wrap svg {
@@ -261,6 +294,7 @@
       flex: 1 1 auto;
       font-size: 0.85rem;
       margin-bottom: 0.25rem;
+      min-height: unset;
     }
 
     .options-list {
@@ -308,6 +342,7 @@
 
     #answerText {
       font-size: 0.85rem;
+      min-height: unset;
     }
 
     .correct-answer {
@@ -330,7 +365,7 @@
         <div class="sign-icon-wrap" id="signIconWrap"></div>
         <p class="fs-5 fw-semibold" id="questionText"></p>
         <ul class="options-list" id="optionsList"></ul>
-        <p class="hint-text mt-2">Click the card to reveal the answer</p>
+        <p class="hint-text mt-2 mb-0">Click the card to reveal the answer</p>
 
         <div class="nav-controls" onclick="event.stopPropagation()">
           <div class="d-flex gap-3 justify-content-center">
@@ -349,7 +384,7 @@
       <div class="card-face card-back">
         <h6 class="mb-3">ANSWER</h6>
         <p class="fs-5" id="answerText"></p>
-        <p class="hint-text mt-3">Click the card to go back to the question</p>
+        <p class="hint-text mt-3 mb-0">Click the card to go back to the question</p>
       </div>
     </div>
   </div>
