@@ -10,6 +10,21 @@
     background-color: #f8f9fa;
   }
 
+  .back-link {
+    align-self: flex-start;
+    margin-bottom: 0.75rem;
+    text-decoration: none;
+    color: #495057;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .back-link:hover {
+    color: #198754;
+  }
+
   .scene {
     width: 500px;
     max-width: 90vw;
@@ -355,6 +370,8 @@
 <body>
 
 <div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh;">
+
+  <a href="index.html" class="back-link">&laquo; Back to Reviewer</a>
 
   <p class="text-muted mb-2" id="progress">Question 1 of 100</p>
 
