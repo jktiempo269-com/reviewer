@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reviewer</title>
+<script>
+  (function () {
+    var saved = localStorage.getItem('theme');
+    var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
 <style>
   :root {
     --bg: #FAFAF8;
@@ -11,6 +18,21 @@
     --muted: #6B6B65;
     --accent: rgb(13, 110, 253);
     --line: #E4E2DC;
+    --card-bg: #fff;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #161614;
+    --ink: #F0F0EC;
+    --muted: #9C9C94;
+    --accent: rgb(70, 145, 255);
+    --line: #34342F;
+    --card-bg: #201F1B;
+  }
+
+  html {
+    background: var(--bg);
+    transition: background 0.15s ease;
   }
 
   * {
@@ -65,10 +87,24 @@
     padding: 14px 20px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--card-bg);
     color: var(--ink);
     cursor: pointer;
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   button:hover {
@@ -98,6 +134,8 @@
 </head>
 <body>
 
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+
   <div class="card">
     <h1>Reviewer</h1>
     <p class="subtitle">Study your way, then put it to the test.</p>
@@ -107,6 +145,24 @@
       <button type="button" onclick="location.href='test.html'">Reviewer Test</button>
     </div>
   </div>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('themeToggle');
+      function sync() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        btn.textContent = isDark ? '☀️' : '🌙';
+      }
+      sync();
+      btn.addEventListener('click', function () {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var next = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        sync();
+      });
+    })();
+  </script>
 
 </body>
 </html>
