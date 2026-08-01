@@ -28,6 +28,7 @@
   .scene {
     width: 560px;
     max-width: 92vw;
+    min-height: 420px;
   }
 
   .quiz-card {
@@ -35,6 +36,18 @@
     border-radius: 1rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     padding: 2rem;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #optionsContainer {
+    margin-top: 1rem;
+  }
+
+  .nav-controls {
+    margin-top: auto;
+    padding-top: 1.25rem;
   }
 
   .sign-icon-wrap {
@@ -116,8 +129,13 @@
   }
 
   @media (max-width: 576px) {
+    .scene {
+      min-height: 480px;
+    }
+
     .quiz-card {
       padding: 1.25rem;
+      min-height: 480px;
     }
 
     #questionText {
@@ -136,7 +154,7 @@
 
   <div class="scene">
 
-    <a href="index.html" class="back-link">&laquo; Back to Reviewer</a>
+    <a href="reviewer-landing.html" class="back-link">&laquo; Back to Reviewer</a>
 
     <div class="d-flex justify-content-between align-items-center mb-2">
       <p class="text-muted mb-0" id="progress">Question 1 of 100</p>
@@ -156,20 +174,22 @@
 
       <p id="feedback" class="mt-2 mb-0"></p>
 
-      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-4">
-        <button class="btn btn-outline-secondary" id="prevBtn">&laquo; Previous</button>
-        <button class="btn btn-primary" id="nextBtn">Next &raquo;</button>
-      </div>
+      <div class="nav-controls">
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+          <button class="btn btn-outline-secondary" id="prevBtn">&laquo; Previous</button>
+          <button class="btn btn-primary" id="nextBtn">Next &raquo;</button>
+        </div>
 
-      <div class="d-flex gap-2 mt-3 align-items-center justify-content-center">
-        <label for="jumpInput" class="text-muted small mb-0">Go to question:</label>
-        <input type="number" id="jumpInput" class="form-control form-control-sm" style="width: 90px;" min="1">
-        <button class="btn btn-sm btn-outline-primary" id="jumpBtn">Go</button>
-      </div>
-      <p class="text-danger small mt-1 mb-0 text-center" id="jumpError" style="display: none;"></p>
+        <div class="d-flex gap-2 mt-3 align-items-center justify-content-center">
+          <label for="jumpInput" class="text-muted small mb-0">Go to question:</label>
+          <input type="number" id="jumpInput" class="form-control form-control-sm" style="width: 90px;" min="1">
+          <button class="btn btn-sm btn-outline-primary" id="jumpBtn">Go</button>
+        </div>
+        <p class="text-danger small mt-1 mb-0 text-center" id="jumpError" style="display: none;"></p>
 
-      <div class="text-center mt-3">
-        <button class="btn btn-sm btn-outline-danger" id="resetBtn">Restart Quiz</button>
+        <div class="text-center mt-3">
+          <button class="btn btn-sm btn-outline-danger" id="resetBtn">Restart Quiz</button>
+        </div>
       </div>
     </div>
 
