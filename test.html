@@ -564,6 +564,8 @@
     progress.textContent = `Question ${item.number} of ${questions.length}`;
     progressBar.style.width = `${(item.number / questions.length) * 100}%`;
     updateScoreBadge();
+
+    prevBtn.disabled = currentIndex === 0;
   }
 
   function selectOption(letter) {
@@ -596,7 +598,10 @@
   }
 
   function goPrev() {
-    currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+    if (currentIndex === 0) {
+      return;
+    }
+    currentIndex--;
     nextBtn.textContent = currentIndex === questions.length - 1 ? "Finish Quiz" : "Next »";
     renderCard();
   }

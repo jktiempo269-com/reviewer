@@ -1706,6 +1706,8 @@
     answerText.innerHTML = `<div class="correct-answer">${correctLetter}. ${correctText}</div>`;
 
     progress.textContent = `Question ${item.number} of ${questions.length}`;
+
+    prevBtn.disabled = currentIndex === 0;
   }
 
   flashcard.addEventListener("click", () => {
@@ -1718,7 +1720,10 @@
   });
 
   prevBtn.addEventListener("click", () => {
-    currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+    if (currentIndex === 0) {
+      return;
+    }
+    currentIndex -= 1;
     renderCard();
   });
 
