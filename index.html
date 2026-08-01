@@ -130,9 +130,91 @@
     background: rgb(13, 110, 253);
     border-color: rgb(13, 110, 253);
   }
+
+  /* --- Page loader --- */
+  .page-loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.25s ease;
+  }
+
+  .page-loader-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loader {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+  .loader div {
+    position: absolute;
+    top: 33px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #1e17f0;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+  }
+  .loader div:nth-child(1) {
+    left: 8px;
+    animation: flip1 0.6s infinite;
+  }
+  .loader div:nth-child(2) {
+    left: 8px;
+    animation: flip2 0.6s infinite;
+  }
+  .loader div:nth-child(3) {
+    left: 32px;
+    animation: flip2 0.6s infinite;
+  }
+  .loader div:nth-child(4) {
+    left: 56px;
+    animation: flip3 0.6s infinite;
+  }
+  @keyframes flip1 {
+    0% {
+      transform: scale(0);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @keyframes flip3 {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(0);
+    }
+  }
+  @keyframes flip2 {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(24px, 0);
+    }
+  }
 </style>
 </head>
 <body>
+
+  <div class="page-loader-overlay" id="pageLoader">
+    <div class="loader">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
 
   <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
 
@@ -141,8 +223,8 @@
     <p class="subtitle">Time to study. Para License. You Got this.</p>
 
     <div class="actions">
-      <button class="primary" type="button" onclick="location.href='flashcards.html'">Flashcards</button>
-      <button type="button" onclick="location.href='test.html'">Reviewer Test</button>
+      <button class="primary" type="button" onclick="navigateTo('flashcards.html')">Flashcards</button>
+      <button type="button" onclick="navigateTo('test.html')">Reviewer Test</button>
     </div>
   </div>
 
@@ -162,6 +244,31 @@
         sync();
       });
     })();
+  </script>
+
+  <script>
+    (function () {
+      var loader = document.getElementById('pageLoader');
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          loader.classList.add('hidden');
+        }, 250);
+      });
+      window.addEventListener('pageshow', function (e) {
+        // Restores instantly (no lingering loader) when coming back via bfcache
+        if (e.persisted) {
+          loader.classList.add('hidden');
+        }
+      });
+    })();
+
+    function navigateTo(url) {
+      var loader = document.getElementById('pageLoader');
+      loader.classList.remove('hidden');
+      setTimeout(function () {
+        window.location.href = url;
+      }, 300);
+    }
   </script>
 
 </body>

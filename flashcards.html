@@ -423,15 +423,101 @@
     background-color: #2a2d31;
     color: #e8e6e3;
   }
+
+  /* --- Page loader --- */
+  .page-loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.25s ease;
+  }
+
+  html[data-bs-theme="dark"] .page-loader-overlay {
+    background: #121417;
+  }
+
+  .page-loader-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loader {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+  .loader div {
+    position: absolute;
+    top: 33px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #1e17f0;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+  }
+  .loader div:nth-child(1) {
+    left: 8px;
+    animation: flip1 0.6s infinite;
+  }
+  .loader div:nth-child(2) {
+    left: 8px;
+    animation: flip2 0.6s infinite;
+  }
+  .loader div:nth-child(3) {
+    left: 32px;
+    animation: flip2 0.6s infinite;
+  }
+  .loader div:nth-child(4) {
+    left: 56px;
+    animation: flip3 0.6s infinite;
+  }
+  @keyframes flip1 {
+    0% {
+      transform: scale(0);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @keyframes flip3 {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(0);
+    }
+  }
+  @keyframes flip2 {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(24px, 0);
+    }
+  }
 </style>
 </head>
 <body>
+
+<div class="page-loader-overlay" id="pageLoader">
+  <div class="loader">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
 
 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
 
 <div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh;">
 
-  <a href="index.html" class="back-link">&laquo; Back to Reviewer</a>
+  <a href="index.html" class="back-link" onclick="return navigateTo(event, 'index.html')">&laquo; Back to Reviewer</a>
 
   <p class="text-muted mb-2" id="progress">Question 1 of 100</p>
 
@@ -1770,6 +1856,31 @@
       sync();
     });
   })();
+</script>
+<script>
+  (function () {
+    var loader = document.getElementById('pageLoader');
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        loader.classList.add('hidden');
+      }, 250);
+    });
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) {
+        loader.classList.add('hidden');
+      }
+    });
+  })();
+
+  function navigateTo(event, url) {
+    event.preventDefault();
+    var loader = document.getElementById('pageLoader');
+    loader.classList.remove('hidden');
+    setTimeout(function () {
+      window.location.href = url;
+    }, 300);
+    return false;
+  }
 </script>
 </body>
 </html>
