@@ -361,7 +361,7 @@
       <p class="text-muted mb-4" id="finalPercent"></p>
       <button class="btn btn-primary" id="restartFromResultsBtn">Restart Quiz</button>
       <div class="mt-3">
-        <a href="reviewer-landing.html" class="back-link justify-content-center" onclick="return navigateTo(event, 'reviewer-landing.html')">&laquo; Back to Reviewer</a>
+        <a href="index.html" class="back-link justify-content-center" onclick="return navigateTo(event, 'reviewer-landing.html')">&laquo; Back to Reviewer</a>
       </div>
     </div>
 
@@ -463,7 +463,15 @@
   };
 </script>
 <script>
-  const questions = [
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  const originalQuestions = [
     { number: 1, question: "A circular sign with a red border and a red diagonal line through a white background generally means:", options: { A: "Yield ahead", B: "A prohibition or restriction", C: "Parking allowed", D: "Hospital zone" }, answer: "B" },
     { number: 2, question: "Regulatory signs are most commonly shown in which shape and color?", options: { A: "Yellow diamond", B: "White or red circle/rectangle", C: "Blue rectangle", D: "Green triangle" }, answer: "B" },
     { number: 3, question: "Warning signs that alert drivers to hazards ahead are typically:", options: { A: "Red octagons", B: "Yellow diamonds with black symbols", C: "Blue circles", D: "White squares" }, answer: "B" },
@@ -566,6 +574,8 @@
     { number: 100, question: "Which of the following is typically required when applying for a driver's license for the first time?", options: { A: "A valid ID, proof of the required seminar, and passing the written and practical exams", B: "A vehicle registration in the applicant's name only", C: "A barangay business permit", D: "Proof of vehicle ownership only, with no exams required" }, answer: "A" }
   ];
 
+  const questions = shuffle([...originalQuestions]);
+
   let currentIndex = 0;
   let selectedLetter = null;
   let answered = false;
@@ -594,7 +604,7 @@
   const restartFromResultsBtn = document.getElementById("restartFromResultsBtn");
 
   function updateScoreBadge() {
-    scoreBadge.textContent = `Score: ${score} / ${attempted}`;
+    scoreBadge.textContent = `Answered: ${attempted} / ${questions.length}`;
   }
 
   function renderCard() {
@@ -604,7 +614,7 @@
     selectedLetter = state ? state.selected : null;
     answered = !!state;
 
-    qNumFront.textContent = item.number;
+    qNumFront.textContent = currentIndex + 1;
     questionText.textContent = item.question;
 
     const signIconWrap = document.getElementById("signIconWrap");
@@ -618,37 +628,23 @@
       btn.className = "option-btn";
       btn.textContent = `${letter}. ${text}`;
       btn.dataset.letter = letter;
+      btn.disabled = answered;
 
-      if (answered) {
-        btn.disabled = true;
-        if (letter === item.answer) {
-          btn.classList.add("correct");
-        } else if (letter === selectedLetter) {
-          btn.classList.add("wrong");
-        }
-      } else {
-        if (letter === selectedLetter) btn.classList.add("selected");
+      if (letter === selectedLetter) {
+        btn.classList.add("selected");
+      }
+      if (!answered) {
         btn.addEventListener("click", () => selectOption(letter));
       }
 
       optionsContainer.appendChild(btn);
     });
 
-    if (answered) {
-      if (state.correct) {
-        feedback.textContent = "Correct!";
-        feedback.className = "mt-2 mb-0 text-success";
-      } else {
-        feedback.textContent = `Incorrect. The correct answer is ${item.answer}. ${item.options[item.answer]}.`;
-        feedback.className = "mt-2 mb-0 text-danger";
-      }
-    } else {
-      feedback.textContent = "";
-      feedback.className = "mt-2 mb-0";
-    }
+    feedback.textContent = "";
+    feedback.className = "mt-2 mb-0";
 
-    progress.textContent = `Question ${item.number} of ${questions.length}`;
-    progressBar.style.width = `${(item.number / questions.length) * 100}%`;
+    progress.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+    progressBar.style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
     updateScoreBadge();
 
     prevBtn.disabled = currentIndex === 0;
@@ -709,9 +705,10 @@
   function showResults() {
     quizScreen.style.display = "none";
     resultsScreen.style.display = "block";
-    finalScore.textContent = `${score} / ${questions.length}`;
-    const pct = Math.round((score / questions.length) * 100);
-    finalPercent.textContent = `${pct}% correct` + (attempted < questions.length ? ` (${questions.length - attempted} question${questions.length - attempted === 1 ? "" : "s"} not answered)` : "");
+    finalScore.textContent = `Correct: ${score}`;
+    const wrongCount = attempted - score;
+    const unanswered = questions.length - attempted;
+    finalPercent.textContent = `Wrong: ${wrongCount}` + (unanswered > 0 ? `, Unanswered: ${unanswered}` : "");
   }
 
   function resetQuiz() {
